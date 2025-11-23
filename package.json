@@ -1,0 +1,27 @@
+{
+	"name": "node-rest-api",
+	"version": "1.0.0",
+	"description": "Pure Node.js REST API, custom exceptions, and MySQL",
+	"main": "server.js",
+	"scripts": {
+		"start": "node --env-file=.env server.js",
+		"dev": "nodemon --env-file=.env server.js"
+	},
+	"keywords": [
+		"rest",
+		"api",
+		"nodejs",
+		"mysql",
+		"authentication"
+	],
+	"author": "",
+	"license": "MIT",
+	"dependencies": {
+		"bcrypt": "^5.1.1",
+		"mysql2": "^3.6.0",
+		"nodemailer": "^7.0.10"
+	},
+	"devDependencies": {
+		"nodemon": "^3.0.1"
+	}
+}
