@@ -2,6 +2,8 @@ const mysql 	= require('mysql2/promise');
 const Database 	= require('./Database');
 
 class MySQLDatabase extends Database {
+	connection = null;
+
 	/**
 	 * 
 	 * @param {object} config 
@@ -39,6 +41,18 @@ class MySQLDatabase extends Database {
 	}
 
 	/**
+	 * Returns the connection object required for transactions
+	 * 
+	 * @returns {Connection}
+	 */
+	async getConnection() {
+		if (!this.connection) {
+			await this.connect();
+		}
+		return this.connection;
+	}
+
+	/**
 	 * 
 	 * @param {string} sql 
 	 * @param {array} params 
@@ -58,7 +72,7 @@ class MySQLDatabase extends Database {
 
 		// return Array.isArray(result) ? result : [result];
 		return result;
-}
+	}
 
 	/**
 	 * 
