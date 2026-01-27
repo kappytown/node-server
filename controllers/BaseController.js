@@ -7,12 +7,11 @@ class BaseController {
 	/**
 	 * Constructor - initializes controller with database, request and response instances
 	 * 
-	 * @param {mysql instance} db - MySQL instance
 	 * @param {Request} request
 	 * @param {Reponse} response
 	 */
-	constructor(db, request, response) {
-		this.db 		= db;
+	constructor(request, response) {
+		this.db 		= request.db;
 		this.request 	= request;
 		this.response 	= response;
 	}

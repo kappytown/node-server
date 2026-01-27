@@ -1,5 +1,5 @@
 const BaseModel     = require('./BaseModel');
-const bcrypt        = require('bcrypt');
+const bcrypt        = require('bcryptjs');
 const nodemailer    = require('nodemailer');
 
 const { 
@@ -24,12 +24,11 @@ class UserModel extends BaseModel {
         
         if (result?.length > 0) {
             // Verify password
-            const validPassword = await bcrypt.compare(password, result[0].password);
-            if (!validPassword) {
-                return null;
-            }
+            const isValidPassword = await bcrypt.compare(password, result[0].password);
 
-            return result[0];
+            if (isValidPassword) {
+                return result[0];
+            }
         }
 
         return null;
@@ -65,11 +64,10 @@ class UserModel extends BaseModel {
 
     /**
      * 
-     * @param {int} id 
      * @returns {object}
      */
-    async read(id) {
-        const result = await this._getUserByField('id', id);
+    async read() {
+        const result = await this._getUserByField('id', this.userId);
 
         if (result?.length > 0) {
             const { id, name, email } = result[0];
@@ -81,7 +79,6 @@ class UserModel extends BaseModel {
 
     /**
      * 
-     * @param {int} id 
      * @param {string} name 
      * @param {string} email 
      * @param {string} password
@@ -89,12 +86,12 @@ class UserModel extends BaseModel {
      * @returns {object|null}
      * @throws {ValidationException}
      */
-    async update(id, name, email, password, newPassword) {
-        //Password!1
+    async update(name, email, password, newPassword) {
         let result;
+
         // If updating password...
         if (password && newPassword) {
-            result = await this._getUserByField('id', id);
+            result = await this._getUserByField('id', this.userId);
 
             if (result?.length > 0) {
                 // Verify password
@@ -107,13 +104,13 @@ class UserModel extends BaseModel {
             // Hash password before storing
             const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-            result = await this.db.query('UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?', [name, email, hashedPassword, id]);
+            result = await this.db.query('UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?', [name, email, hashedPassword, this.userId]);
         } else {
-            result = await this.db.query('UPDATE users SET name = ?, email = ? WHERE id = ?', [name, email, id]);
+            result = await this.db.query('UPDATE users SET name = ?, email = ? WHERE id = ?', [name, email, this.userId]);
         }
 
         if (result?.changedRows > 0) {
-            return { id, email, name };
+            return { id: this.userId, email, name };
         } else {
             return null;
         }
@@ -121,11 +118,10 @@ class UserModel extends BaseModel {
 
     /**
      * 
-     * @param {int} id 
      * @returns {bool}
      */
-    async delete(id) {
-        const result = await this.db.query('DELETE FROM users WHERE id = ?', [id]);
+    async delete() {
+        const result = await this.db.query('DELETE FROM users WHERE id = ?', [this.userId]);
         
         return result?.affectedRows > 0;
     }

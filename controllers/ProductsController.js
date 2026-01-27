@@ -1,4 +1,4 @@
-const AuthController  = require('./AuthController');
+const BaseController  = require('./BaseController');
 const ProductsModel     = require('../models/ProductsModel');
 const { 
     ValidationException, 
@@ -11,12 +11,12 @@ const {
  * 
  * Handles CRUD operations for product resources.
  */
-class ProductsController extends AuthController {
+class ProductsController extends BaseController {
 
-    constructor(db, req, res) {
-        super(db, req, res);
+    constructor(req, res) {
+        super(req, res);
 
-        this.model = new ProductsModel(this.db);
+        this.model = new ProductsModel(this.db, this.request.userId);
     }
 
     /**
@@ -27,7 +27,6 @@ class ProductsController extends AuthController {
 		const limit 	= parseInt(this.request.input('limit', 10, 'query'));
 		const result 	= await this.model.readAll(offset, limit);
 
-		await this.db.close();
 		this.response.success(result);
     }
 
@@ -45,7 +44,6 @@ class ProductsController extends AuthController {
 
 		const result = await this.model.read(id);
 
-		await this.db.close();
 		this.response.success(result);
     }
 
@@ -55,7 +53,6 @@ class ProductsController extends AuthController {
 	async readCategories() {
 		const result = await this.model.readCategories();
 
-		await this.db.close();
 		this.response.success(result);
 	}
 
@@ -73,7 +70,6 @@ class ProductsController extends AuthController {
 
 		const result = await this.model.readCategory(name);
 
-		await this.db.close();
 		this.response.success(result);
     }
 
@@ -84,8 +80,6 @@ class ProductsController extends AuthController {
 	 * @throws {ValidationException}
 	 */
     async update() {
-		await this.authenticate();
-
 		const id 		= parseInt(this.request.getParam('id'));
 		const product = {
 			name: 		this.request.getSanitizedInput('name', null),
@@ -103,8 +97,6 @@ class ProductsController extends AuthController {
 
 		const result = await this.model.update(id, product);
 
-		await this.db.close();
-
 		if (!result) {
 			throw new ValidationException('Failed to update product.');
 		}
@@ -119,8 +111,6 @@ class ProductsController extends AuthController {
 	 * @throws {ValidationException}
 	 */
     async delete() {
-		await this.authenticate();
-
 		const id = parseInt(this.request.getParam('id'));
 
 		if (!id) {
@@ -128,8 +118,6 @@ class ProductsController extends AuthController {
 		}
 
 		const result = await this.model.delete(id);
-
-		await this.db.close();
 
 		if (!result) {
 			throw new ValidationException('Failed to delete product.');

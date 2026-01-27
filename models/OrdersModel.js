@@ -1,5 +1,4 @@
 const BaseModel     = require('./BaseModel');
-const bcrypt        = require('bcrypt');
 
 const { 
     ValidationException

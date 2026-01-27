@@ -1,4 +1,4 @@
-const AuthController  = require('./AuthController');
+const BaseController  = require('./BaseController');
 const OrdersModel     = require('../models/OrdersModel');
 const { 
     ValidationException, 
@@ -11,25 +11,22 @@ const {
  * 
  * Handles CRUD operations for order resources.
  */
-class OrdersController extends AuthController {
+class OrdersController extends BaseController {
 
-    constructor(db, req, res) {
-        super(db, req, res);
+    constructor(req, res) {
+        super(req, res);
 
-        this.model = new OrdersModel(this.db);
+        this.model = new OrdersModel(this.db, this.request.userId);
     }
 
     /**
      * List all orders
      */
     async readAll() {
-		await this.authenticate();
-
-        const offset 	= parseInt(this.request.input('offset', 0, 'query'));
+		const offset 	= parseInt(this.request.input('offset', 0, 'query'));
 		const limit 	= parseInt(this.request.input('limit', 10, 'query'));
 		const result 	= await this.model.readAll(offset, limit);
 
-		await this.db.close();
 		this.response.success(result);
     }
 
@@ -39,9 +36,7 @@ class OrdersController extends AuthController {
 	 * @throws {MissingParametersException}
      */
     async read() {
-		await this.authenticate();
-
-        const id = parseInt(this.request.getParam('id'));
+		const id = parseInt(this.request.getParam('id'));
 
 		if (!id) {
 			throw new MissingParametersException('Order id is required.');
@@ -49,7 +44,6 @@ class OrdersController extends AuthController {
 
 		const result = await this.model.read(id);
 
-		await this.db.close();
 		this.response.success(result);
     }
 
@@ -59,7 +53,6 @@ class OrdersController extends AuthController {
 	async readStatuses() {
 		const result = await this.model.readStatuses();
 
-		await this.db.close();
 		this.response.success(result);
 	}
 
@@ -77,7 +70,6 @@ class OrdersController extends AuthController {
 
 		const result = await this.model.readStatus(name);
 
-		await this.db.close();
 		this.response.success(result);
     }
 }

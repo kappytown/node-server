@@ -11,7 +11,6 @@ class ApiException extends Error {
 	 * @param {string|null} message - Error message (default: 'An error occurred')
 	 * @param {object|null} vars - Key-value pairs to append to the message for context
 	 * @param {number} code - HTTP status code (default: 500)
-	 * @param {Error|null} previous - Original exception that caused this error
 	 * 
 	 * @example
 	 * throw new ApiException(
@@ -20,7 +19,7 @@ class ApiException extends Error {
 	 *   404
 	 * );
 	 */
-	constructor(message = null, vars = null, code = 500, previous = null) {
+	constructor(message = null, vars = null, code = 500) {
 		let finalMessage = message || 'An error occurred';
 
 		// Append vars to message if provided for better context
@@ -34,7 +33,6 @@ class ApiException extends Error {
 		// Set exception properties
 		this.name 		= this.constructor.name;
 		this.code 		= code;
-		this.previous 	= previous;
 		this.vars 		= vars;
 
 		// Maintains proper stack trace for debugging

@@ -1,42 +1,47 @@
 const mysql 	= require('mysql2/promise');
 const Database 	= require('./Database');
+const { DatabaseConnectionException } = require('../exceptions/CustomExceptions');
 
 class MySQLDatabase extends Database {
-	connection = null;
+	pool 		= null;
+	lastQuery 	= null;
 
 	/**
 	 * 
-	 * @param {object} config 
+	 * @param {object} config
 	 */
 	constructor(config) {
 		super(config);
 
-		this.host	 	= config.host;
-		this.user 		= config.user;
-		this.password 	= config.password;
-		this.database 	= config.database;
+		this.host	 	= config.HOST;
+		this.user 		= config.USER;
+		this.password 	= config.PASSWORD;
+		this.database 	= config.DATABASE;
 	}
 
 	/**
 	 * 
 	 */
 	async connect() {
+		if (this.pool) return;
+
 		if (!this.host || !this.user || !this.password || !this.database) {
-			throw new Error('Invalid database connection. Please provide connection parameters');
+			throw (new DatabaseConnectionException('Connection refused')).setLogMessage('Invalid database connection. Please provide connection parameters');
 		}
 
 		try {
-			this.connection = await mysql.createConnection({
-				host: 		this.host,
-				user: 		this.user,
-				password: 	this.password,
-				database: 	this.database
+			this.pool = await mysql.createPool({
+				host: 				this.host,
+				user: 				this.user,
+				password: 			this.password,
+				database: 			this.database,
+				waitForConnections: true,
+				connectionLimit: 	10,
+				queueLimit: 		0
 			});
 			
 		} catch (err) {
-			// err.code: 'ECONNREFUSED'
-			console.error('Database Connection Error:', err, err.code);
-			throw err;
+			throw (new DatabaseConnectionException('Connection refused')).setLogMessage(err.stack);
 		}
 	}
 
@@ -46,10 +51,10 @@ class MySQLDatabase extends Database {
 	 * @returns {Connection}
 	 */
 	async getConnection() {
-		if (!this.connection) {
+		if (!this.pool) {
 			await this.connect();
 		}
-		return this.connection;
+		return await this.pool.getConnection();
 	}
 
 	/**
@@ -59,7 +64,7 @@ class MySQLDatabase extends Database {
 	 * @returns {array} results from executing the query
 	 */
 	async query(sql, params) {
-		if (!this.connection) {
+		if (!this.pool) {
 			await this.connect();
 		}
 
@@ -68,7 +73,7 @@ class MySQLDatabase extends Database {
 
 		this._logQuery(sql, sanitizedParams);
 
-		const [result, fields] = await this.connection.query(sql, params);
+		const [result, fields] = await this.pool.query(sql, params);
 
 		// return Array.isArray(result) ? result : [result];
 		return result;
@@ -127,7 +132,7 @@ class MySQLDatabase extends Database {
 	 * 
 	 */
 	async close() {
-		if (this.connection) await this.connection.end();
+		if (this.pool) await this.pool.end();
 	}
 }
 

@@ -1,4 +1,4 @@
-const AuthController  = require('./AuthController');
+const BaseController  = require('./BaseController');
 const ReportModel     = require('../models/ReportModel');
 const { 
     ValidationException, 
@@ -12,12 +12,12 @@ const {
  * Handles CRUD operations for report resources.
  * Reports can store structured data in JSON format for analytics and reporting.
  */
-class ReportController extends AuthController {
+class ReportController extends BaseController {
 
-    constructor(db, req, res) {
-        super(db, req, res);
+    constructor(req, res) {
+        super(req, res);
 
-        this.model = new ReportModel(this.db);
+        this.model = new ReportModel(this.db, this.request.userId);
     }
 
     /**
@@ -39,11 +39,8 @@ class ReportController extends AuthController {
      * 
      */
     async orderStats() {
-        await this.authenticate();
-
-        const result = await this.model.orderStats(this.userId);
+        const result = await this.model.orderStats();
         
-        await this.db.close();
         this.response.success(result);
     }
 
@@ -51,11 +48,8 @@ class ReportController extends AuthController {
      * 
      */
     async topProducts() {
-        await this.authenticate();
-
-        const result = await this.model.topProducts(this.userId);
+       const result = await this.model.topProducts();
         
-        await this.db.close();
         this.response.success(result);
     }
 
@@ -63,11 +57,8 @@ class ReportController extends AuthController {
      * 
      */
     async recentOrders() {
-        await this.authenticate();
-
-        const result = await this.model.recentOrders(this.userId);
+         const result = await this.model.recentOrders();
         
-        await this.db.close();
         this.response.success(result);
     }
 }

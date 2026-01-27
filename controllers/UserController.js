@@ -1,24 +1,26 @@
-const AuthController  = require('./AuthController');
-const UserModel       = require('../models/UserModel');
+const BaseController    = require('./BaseController');
+const UserModel         = require('../models/UserModel');
+const AuthModel 	    = require('../models/AuthModel');
+const SessionService    = require('../services/SessionService');
 const { 
-    ValidationException, 
-    NotFoundException, 
-    MissingParametersException
+	ValidationException, 
+	NotFoundException, 
+	MissingParametersException, 
+	AuthenticationException
 } = require('../exceptions/CustomExceptions');
 
 /**
  * UserController class handles all user related actions.
  * 
- * Note: All controllers that require authentication must extend the AuthController 
- * and call await this.authenticate() before executing any other code. This will ensure that no 
- * other code will execute if the user's session is invalid.
+ * Handles CRUD operations for user resources.
  */
-class UserController extends AuthController {
+class UserController extends BaseController {
 
-    constructor(db, req, res) {
-        super(db, req, res);
+    constructor(req, res) {
+        super(req, res);
 
-        this.model = new UserModel(this.db);
+        this.model = new UserModel(this.db, this.request.userId);
+        this.authModel = new AuthModel(this.db);
     }
 
     /**
@@ -27,19 +29,13 @@ class UserController extends AuthController {
     async session() {
         let result;
 		if (this.request.method === 'GET') {
-            // Authenticates the user's session
-            await this.authenticate();
-
             // Gets the user's details
-			result = await this.model.read(this.userId);
+			result = await this.model.read();
 
 		} else {
             // Deletes the user' session
-			result = await this.deleteSession();
+			result = await this._handleLogout();
         }
-
-        // Cleanup
-        await this.db.close();
 
 		this.response.success(result);
     }
@@ -61,12 +57,23 @@ class UserController extends AuthController {
         const result = await this.model.login(email, password);
 
         if (!result) {
-            this.deleteCookie();
+            this.response.clearCookie(SessionService.getCookieName());
             throw new NotFoundException('Invalid email or password');
         }
 
-        await this.createSession(result.id);
-        await this.db.close();
+        // Use SessionService to generate data
+		const token 	= SessionService.generateToken();
+		const expiresAt = SessionService.getExpiration();
+
+        // Save to the db
+		const sessionCreated = await this.authModel.createSession(result.id, token, expiresAt);
+
+        if (!sessionCreated) {
+			throw new AuthenticationException('Unable to create user session.');
+		}
+
+        // Set the session cookie
+        this.response.cookie(SessionService.getCookieName(), token, { maxAge: SessionService.getCookieMaxAge(), secure: true, sameSite: 'Lax' }); // 2 weeks
 
         const { password: _, ...userWithoutPassword } = result;
         this.response.success(userWithoutPassword);
@@ -76,11 +83,27 @@ class UserController extends AuthController {
      * Logs the user and and removes the user's session
      */
     async logout() {
-        await this.deleteSession();
-        await this.db.close();
+        await this._handleLogout();
         
         this.response.success(null, 'Logged out successfully');
     }
+
+	/**
+	 * Deletes the users session
+	 * 
+	 * @returns {boolean} true if token was successfully deleted
+	 */
+	async _handleLogout() {
+		const token = this.request.getCookie(SessionService.getCookieName());
+		if (token) {
+			await this.authModel.deleteSession(token);
+		}
+
+		// Delete the session token
+		this.response.cookie(SessionService.getCookieName(), '', { expires: 'Thu, 01 Jan 1970 00:00:00 GMT' });
+
+		return true;
+	}
 
     /**
      * Create a new customer
@@ -99,8 +122,6 @@ class UserController extends AuthController {
 
         const result  = await this.model.create(name, email, password);
 
-        await this.db.close();
-
         if (!result) {
             throw new ValidationException('Failed to create user. Email may already be in use.');
         }
@@ -114,15 +135,8 @@ class UserController extends AuthController {
      * @throws {MissingParametersException}
      */
     async read() {
-        await this.authenticate();
-
-        if (!this.userId) {
-            throw new MissingParametersException('User id is required.');
-        }
-        
         const result = await this.model.read(this.userId);
 
-        await this.db.close();
         this.response.success(result);
     }
 
@@ -133,14 +147,12 @@ class UserController extends AuthController {
      * @throws {ValidationException}
      */
     async update() {
-        await this.authenticate();
-
         const name          = this.request.getSanitizedInput('name');
         const email         = this.request.getSanitizedInput('email', null, 'email');
         const password      = this.request.getSanitizedInput('password', null, 'password');
         const newPassword   = this.request.getSanitizedInput('new_password', null, 'password');
 
-        if (!this.userId || !name || !email) {
+        if (!this.request.userId || !name || !email) {
             throw new MissingParametersException('User ID, name, and email are required.');
         }
 
@@ -154,9 +166,7 @@ class UserController extends AuthController {
             }
         }
         
-        const result  = await this.model.update(this.userId, name, email, password, newPassword);
-
-        await this.db.close();
+        const result  = await this.model.update(name, email, password, newPassword);
 
         if (!result) {
             throw new ValidationException('Failed to update user. Please try again shortly.');
@@ -172,21 +182,13 @@ class UserController extends AuthController {
      * @throws {ValidationException}
      */
     async delete() {
-        await this.authenticate();
-
-        if (!this.userId) {
-            throw new MissingParametersException('User ID is required.');
-        }
-
-        const result = await this.model.delete(this.userId);
-
-        await this.db.close();
+        const result = await this.model.delete();
 
         if (!result) {
             throw new ValidationException('Failed to delete user.')
         }
 
-        this.response.clearCookie(this.cookieName);
+        this.response.clearCookie(SessionService.getCookieName());
         this.response.success(result);
     }
 
@@ -206,8 +208,6 @@ class UserController extends AuthController {
         }
 
         const result  = await this.model.sendMail(name, email, message);
-
-        await this.db.close();
 
         if (!result) {
             throw new ValidationException('Failed to send email. Please try again shortly.');
