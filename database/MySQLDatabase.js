@@ -73,9 +73,8 @@ class MySQLDatabase extends Database {
 
 		this._logQuery(sql, sanitizedParams);
 
-		const [result, fields] = await this.pool.query(sql, params);
-
-		// return Array.isArray(result) ? result : [result];
+		const [result, fields] = await this.pool.query(sql, sanitizedParams);
+		
 		return result;
 	}
 
