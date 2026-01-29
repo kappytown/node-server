@@ -18,80 +18,89 @@ A professional, production-ready REST API built with pure Node.js (no Express), 
 ## Project Structure
 ```bash
 server/
-├── server.js                     # Main server file with routing
-├── package.json                  # Dependencies and scripts
-├── database.sql                  # Database schema
 ├── .env                          # Environment variables
+├── database.sql                  # Database schema
+├── package.json                  # Dependencies and scripts
+├── server.js                     # Main server file with routing
 ├── conf/
-│   ├── config.json               # Configuration file
-├── lib/
-│   ├── InputSanitizer.js         # Provides comprehensive input sanitization and validation to prevent SQL injection, XSS, and other injection attacks.
-│   ├── Request.js                # Request parsing and validation
-│   ├── Response.js               # Response helper methods
-│   └── Router.js                 # Router used to match endpoints to controllers e.g., this.router.post('/api/v1/user', 'UserController', 'create') routes to UserController / create()
+│   └── config.js                 # Configuration file
+├── controllers/
+│   ├── BaseController.js         # Base controller class (All controllers should extend this base class)
+│   ├── OrdersController.js       # Orders resource CRUD
+│   ├── ProductsController.js     # Products resource CRUD
+│   ├── ReportController.js       # User resource CRUD
+│   └── UserController.js         # User resource CRUD
 ├── database/
 │   ├── Database.js               # Base database class
-│   └── DatabaseFactory.js        # Factory class for instantiating database
+│   ├── DatabaseFactory.js        # Factory class for instantiating database
 │   └── MySQLDatabase.js          # MySQL database class
 ├── exceptions/
 │   ├── ApiException.js           # Base exception class
 │   └── CustomExceptions.js       # All custom exceptions
-├── controllers/
-│   ├── BaseController.js         # Base controller class (All controllers should extend this base class)
-│   ├── AuthController.js         # Used for authenticating the user
-│   ├── ReportController.js       # Report resource CRUD
-│   └── UserController.js         # User resource CRUD
-└── models/
-    ├── BaseModel.js              # Base model class
-    ├── AuthModel.js              # Auth operations
-    ├── ReportModel.js            # Report database operations
-    └── UserModel.js              # User database operations
+├── lib/
+│   ├── InputSanitizer.js         # Provides comprehensive input sanitization and validation to prevent SQL injection, XSS, and other injection attacks.
+│   ├── Pipeline.js               # Handles sequential execution of all middleware functions
+│   ├── Request.js                # Request parsing and validation
+│   ├── Response.js               # Response helper methods
+│   └── Router.js                 # Router used to match endpoints to controllers e.g., this.router.post('/api/v1/user', 'UserController', 'create') routes to UserController / create()
+├── logs/
+├── middleware/
+│   └── AuthMiddleware.js         # Used to authenticate the user before any route is executed
+├── models/
+│   ├── AuthModel.js              # Auth operations
+│   ├── BaseModel.js              # Base model class
+│   ├── OrdersModel.js            # Orders model class
+│   ├── ProductsModel.js          # Prducts model class
+│   ├── ReportModel.js            # Report database operations
+│   └── UserModel.js              # User database operations
+└── services/
+    └── SessionService.js         # Session related helper functions
 ```
 
 ## API Endpoints
-**Authentication Routes**
-| Method   | Endpoint               | Description |
-| :------- | :--------------------- | :---------- |
-| GET    | `/api/v1/auth/session` | `Authenticate user` | 
-| DELETE | `/api/v1/auth/session` | `Remove session` |
+**Session Routes**
+| Method | Endpoint               | Controller       | Action    | Middleware     |
+| :----- | :--------------------- | :--------------- | :-------- | :------------- |
+| GET    | `/api/v1/auth/session` | `UserController` | `session` | [ authenticate ]
+| DELETE | `/api/v1/auth/session` | `UserController` | `session` | [ authenticate ]
 
 **Auth Routes**
-| Method   | Endpoint              | Description |
-| :------- | :-------------------- | :---------- |
-| POST   | `/api/v1/auth/login`  | Login user (creates session) |
-| POST   | `/api/v1/auth/logout` | Logout user (removes session) |
+| Method | Endpoint              | Controller       | Action   | Middleware     |
+| :----- | :-------------------- | :--------------- | :------- | :------------- |
+| POST   | `/api/v1/auth/login`  | `UserController` | `login`  | 
+| POST   | `/api/v1/auth/logout` | `UserController` | `logout` | [ authenticate ]
 
 **User Routes**
-| Method   | Endpoint                | Description |
-| :------- | :---------------------- | :---------- |
-| POST   | `/api/v1/user`          | Creates a new user |
-| GET    | `/api/v1/user/:userId`  | Gets the user by id |
-| PUT    | `/api/v1/user/:userId`  | Updates the user |
-| DELETE | `/api/v1/user/:userId`  | Removes the user |
-| POST   | `/api/v1/user/sendMail` | Sends email |
+| Method | Endpoint              | Controller       | Action       | Middleware     |
+| :----- | :-------------------- | :--------------- | :----------- | :------------- |
+| POST   | `/api/v1/user`          | `UserController` | `create`   |
+| GET    | `/api/v1/user/:userId`  | `UserController` | `read`     | [ authenticate ]
+| PUT    | `/api/v1/user/:userId`  | `UserController` | `update`   | [ authenticate ]
+| DELETE | `/api/v1/user/:userId`  | `UserController` | `delete`   | [ authenticate ]
+| POST   | `/api/v1/user/sendMail` | `UserController` | `sendMail` |
 
 **Product Routes**
-| Method   | Endpoint                          | Description |
-| :------- | :-------------------------------- | :---------- |
-| GET    | `/api/v1/products/categories`     | Gets all product categories |
-| GET    | `/api/v1/products/category/:name` | Gets all products by category name |
-| GET    | `/api/v1/products`                | Gets all products |
-| GET    | `/api/v1/products/:id`            | Gets the product by id |
-| PUT    | `/api/v1/products/:id`            | Updates the product |
-| DELETE | `/api/v1/products/:id`            | Removes the product |
+| Method | Endpoint                        | Controller             | Action           | Middleware     |
+| :----- | :------------------------------ | :--------------------- | :--------------- | :------------- |
+| GET    | `/api/v1/products/categories`     | `ProductsController` | `readCategories` |
+| GET    | `/api/v1/products/category/:name` | `ProductsController` | `readCategory`   |
+| GET    | `/api/v1/products`                | `ProductsController` | `readAll`        |
+| GET    | `/api/v1/products/:id`            | `ProductsController` | `read`           |
+| PUT    | `/api/v1/products/:id`            | `ProductsController` | `update`         | [ authenticate ]
+| DELETE | `/api/v1/products/:id`            | `ProductsController` | `delete`         | [ authenticate ]
 
 **Order Routes**
-| Method   | Endpoint                      | Description |
-| :------- | :---------------------------- | :---------- |
-| GET    | `/api/v1/orders/statuses`     | Gets all the order statuses |
-| GET    | `/api/v1/orders/status/:name` | Gets all the orders by status name |
-| GET    | `/api/v1/orders`              | Gets all orders |
-| GET    | `/api/v1/orders/:id`          | Gets the order by id |
+| Method | Endpoint                    | Controller           | Action         | Middleware     |
+| :----- | :-------------------------- | :------------------- | :------------- | :------------- |
+| GET    | `/api/v1/orders/statuses`     | `OrdersController` | `readStatuses` | [ authenticate ]
+| GET    | `/api/v1/orders/status/:name` | `OrdersController` | `readStatus`   | [ authenticate ]
+| GET    | `/api/v1/orders`              | `OrdersController` | `readAll`      | [ authenticate ]
+| GET    | `/api/v1/orders/:id`          | `OrdersController` | `read`         | [ authenticate ]
 
 **Report Routes**
-| Method   | Endpoint                   | Description |
-| :------- | :------------------------- | :---------- |
-| GET    | `/api/v1/report/:reportId` | Gets the report by reportId |
+| Method | Endpoint                 | Controller           | Action  | Middleware     |
+| :----- | :----------------------- | :------------------- | :------ | :------------- |
+| GET    | `/api/v1/report/:reportId` | `ReportController` | `index` | [ authenticate ]
 
 
 ## Flow
