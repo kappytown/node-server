@@ -1,6 +1,6 @@
 const mysql 	= require('mysql2/promise');
 const Database 	= require('./Database');
-const { DatabaseConnectionException } = require('../exceptions/CustomExceptions');
+const { DatabaseConnectionException } = require('#exceptions/CustomExceptions');
 
 class MySQLDatabase extends Database {
 	pool 		= null;

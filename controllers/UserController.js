@@ -1,13 +1,13 @@
 const BaseController    = require('./BaseController');
-const UserModel         = require('../models/UserModel');
-const AuthModel 	    = require('../models/AuthModel');
-const SessionService    = require('../services/SessionService');
+const UserModel         = require('#models/UserModel');
+const AuthModel 	    = require('#models/AuthModel');
+const SessionService    = require('#services/SessionService');
 const { 
 	ValidationException, 
 	NotFoundException, 
 	MissingParametersException, 
 	AuthenticationException
-} = require('../exceptions/CustomExceptions');
+} = require('#exceptions/CustomExceptions');
 
 /**
  * UserController class handles all user related actions.

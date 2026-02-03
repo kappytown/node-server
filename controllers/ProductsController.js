@@ -1,10 +1,9 @@
 const BaseController  = require('./BaseController');
-const ProductsModel     = require('../models/ProductsModel');
+const ProductsModel     = require('#models/ProductsModel');
 const { 
     ValidationException, 
-    NotFoundException, 
     MissingParametersException 
-} = require('../exceptions/CustomExceptions');
+} = require('#exceptions/CustomExceptions');
 
 /**
  * Products Controller

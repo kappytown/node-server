@@ -1,4 +1,4 @@
-const InputSanitizer = require('../lib/InputSanitizer');
+const InputSanitizer = require('#lib/InputSanitizer');
 
 class Database {
 	constructor(config) {

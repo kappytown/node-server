@@ -1,6 +1,6 @@
-const { AuthenticationException } = require('../exceptions/CustomExceptions');
-const AuthModel = require('../models/AuthModel');
-const SessionService = require('../services/SessionService');
+const AuthModel 		= require('#models/AuthModel');
+const SessionService 	= require('#services/SessionService');
+const { AuthenticationException } = require('#exceptions/CustomExceptions');
 
 /**
  * Middleware to handle user authentication via session cookies.

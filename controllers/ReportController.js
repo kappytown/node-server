@@ -1,10 +1,6 @@
 const BaseController  = require('./BaseController');
-const ReportModel     = require('../models/ReportModel');
-const { 
-    ValidationException, 
-    NotFoundException, 
-    MissingParametersException 
-} = require('../exceptions/CustomExceptions');
+const ReportModel     = require('#models/ReportModel');
+const { NotFoundException } = require('#exceptions/CustomExceptions');
 
 /**
  * Report Controller

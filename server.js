@@ -7,14 +7,14 @@
 
 const http 				= require('http');
 const url 				= require('url');
-const Router 			= require('./lib/Router');
-const Request 			= require('./lib/Request');
-const Response 			= require('./lib/Response');
-const Pipeline 			= require('./lib/Pipeline');
-const ApiException 		= require('./exceptions/ApiException');
-const { authenticate } 	= require('./middleware/AuthMiddleware');
-const config 			= require('./conf/config');
-const DatabaseFactory 	= require('./database/DatabaseFactory');
+const Router 			= require('#lib/Router');
+const Request 			= require('#lib/Request');
+const Response 			= require('#lib/Response');
+const Pipeline 			= require('#lib/Pipeline');
+const ApiException 		= require('#exceptions/ApiException');
+const { authenticate } 	= require('#middleware/AuthMiddleware');
+const config 			= require('#conf/config');
+const DatabaseFactory 	= require('#database/DatabaseFactory');
 
 const PORT 				= process.env.PORT || 3000;
 const API_PATH 			= process.env.API_PATH || '/api/v1';

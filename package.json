@@ -23,5 +23,16 @@
 	},
 	"devDependencies": {
 		"nodemon": "^3.0.1"
+	},
+	"imports": {
+		"#conf/*": "./conf/*.js",
+		"#controllers/*": "./controllers/*.js",
+		"#database/*": "./database/*.js",
+		"#exceptions/*": "./exceptions/*.js",
+		"#lib/*": "./lib/*.js",
+		"#middleware/*": "./middleware/*.js",
+		"#models/*": "./models/*.js",
+		"#services/*": "./services/*.js",
+		"#root/*": "./*.js"
 	}
 }

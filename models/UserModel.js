@@ -1,10 +1,7 @@
 const BaseModel     = require('./BaseModel');
 const bcrypt        = require('bcryptjs');
 const nodemailer    = require('nodemailer');
-
-const { 
-    ValidationException
-} = require('../exceptions/CustomExceptions');
+const { ValidationException } = require('#exceptions/CustomExceptions');
 
 /**
  * User Model

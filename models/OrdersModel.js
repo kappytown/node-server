@@ -1,9 +1,5 @@
 const BaseModel     = require('./BaseModel');
 
-const { 
-    ValidationException
-} = require('../exceptions/CustomExceptions');
-
 /**
  * Orders Model
  * 
